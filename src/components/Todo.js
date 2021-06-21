@@ -98,7 +98,7 @@ class Todo extends Component {
 			todos: '',
 			title: '',
 			completed: '',
-			todoId: '',
+			id: '',
 			errors: [],
 			open: false,
 			uiLoading: true,
@@ -114,6 +114,12 @@ class Todo extends Component {
 	handleChange = (event) => {
 		this.setState({
 			[event.target.name]: event.target.value
+		});
+	};
+
+    handleChecked = (event) => {
+		this.setState({
+			[event.target.name]: event.target.checked
 		});
 	};
 
@@ -138,9 +144,8 @@ class Todo extends Component {
 		authMiddleWare(this.props.history);
 		const authToken = localStorage.getItem('AuthToken');
 		axios.defaults.headers.common = { Authorization: `${authToken}` };
-		let todoId = data.todo.todoId;
-		axios
-			.delete(`todo/${todoId}`)
+		let id = data.todo.id;
+		axios.delete(`todos/${id}`)
 			.then(() => {
 				window.location.reload();
 			})
@@ -153,7 +158,7 @@ class Todo extends Component {
 		this.setState({
 			title: data.todo.title,
 			completed: data.todo.completed,
-			todoId: data.todo.todoId,
+			id: data.todo.id,
 			buttonType: 'Edit',
 			open: true
 		});
@@ -174,7 +179,7 @@ class Todo extends Component {
 
 		const handleClickOpen = () => {
 			this.setState({
-				todoId: '',
+				id: '',
 				title: '',
 				completed: '',
 				buttonType: '',
@@ -185,22 +190,23 @@ class Todo extends Component {
 		const handleSubmit = (event) => {
 			authMiddleWare(this.props.history);
 			event.preventDefault();
-			const userTodo = {
+			const todo = {
 				title: this.state.title,
-				completed: this.state.completed
+				completed: this.state.completed,
+                date: new Date().getTime()
 			};
 			let options = {};
 			if (this.state.buttonType === 'Edit') {
 				options = {
-					url: `/todos/${this.state.todoId}`,
+					url: `/todos/${this.state.id}`,
 					method: 'patch',
-					data: userTodo
+					data: todo
 				};
 			} else {
 				options = {
 					url: '/todos',
 					method: 'post',
-					data: userTodo
+					data: todo
 				};
 			}
 			const authToken = localStorage.getItem('AuthToken');
@@ -278,7 +284,7 @@ class Todo extends Component {
 									/>
 								</Grid>
 								<Grid item xs={12}>
-									<Checkbox
+          							<Checkbox
 										variant="outlined"
 										required
 										fullWidth
@@ -288,8 +294,8 @@ class Todo extends Component {
 										autoComplete="todoCompleted"
 										helperText={errors.completed}
 										error={errors.completed ? true : false}
-										onChange={this.handleChange}
-										checked={this.state.completed}
+										onChange={this.handleChecked}
+                                        checked={this.state.completed}
 									/>
 								</Grid>
 							</Grid>
@@ -299,13 +305,13 @@ class Todo extends Component {
 					<Grid container spacing={2}>
 						{this.state.todos.map((todo) => (
 							<Grid item xs={12} sm={6}>
-								<Card className={classes.root} variant="outlined">
+								<Card id={todo.id} className={classes.root} variant="outlined">
 									<CardContent>
 										<Typography variant="h5" component="h2">
 											{todo.title}
 										</Typography>
 										<Typography className={classes.pos} color="textSecondary">
-											{dayjs(todo.date).fromNow()}
+											{dayjs(todo.date).toISOString()}
 										</Typography>
 										<Typography variant="body2" component="p">
 											{`Completed: ${todo.completed}`}
